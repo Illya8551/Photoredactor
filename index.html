@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Web Editor</title>
+
+<style>
+body{
+margin:0;
+font-family:sans-serif;
+background:#222;
+color:white;
+}
+
+#toolbar{
+background:#333;
+padding:10px;
+display:flex;
+gap:10px;
+align-items:center;
+}
+
+button,input{
+padding:6px;
+}
+
+canvas{
+background:white;
+display:block;
+margin:auto;
+cursor:crosshair;
+}
+</style>
+</head>
+
+<body>
+
+<div id="toolbar">
+
+<input type="color" id="color" value="#000000">
+
+<button onclick="tool='brush'">Кисть</button>
+<button onclick="tool='fill'">Заливка</button>
+<button onclick="tool='rect'">Прямоугольник</button>
+<button onclick="tool='circle'">Круг</button>
+
+<input type="file" id="upload">
+
+<button onclick="saveImage()">Скачать</button>
+
+</div>
+
+<canvas id="canvas" width="1000" height="600"></canvas>
+
+<script>
+
+const canvas=document.getElementById("canvas")
+const ctx=canvas.getContext("2d")
+
+let tool="brush"
+let drawing=false
+let startX,startY
+
+const colorPicker=document.getElementById("color")
+
+canvas.addEventListener("mousedown",e=>{
+drawing=true
+startX=e.offsetX
+startY=e.offsetY
+
+if(tool==="fill"){
+ctx.fillStyle=colorPicker.value
+ctx.fillRect(0,0,canvas.width,canvas.height)
+drawing=false
+}
+})
+
+canvas.addEventListener("mousemove",e=>{
+if(!drawing) return
+
+if(tool==="brush"){
+ctx.strokeStyle=colorPicker.value
+ctx.lineWidth=3
+ctx.lineCap="round"
+
+ctx.lineTo(e.offsetX,e.offsetY)
+ctx.stroke()
+ctx.beginPath()
+ctx.moveTo(e.offsetX,e.offsetY)
+}
+})
+
+canvas.addEventListener("mouseup",e=>{
+drawing=false
+
+if(tool==="rect"){
+ctx.strokeStyle=colorPicker.value
+ctx.strokeRect(startX,startY,e.offsetX-startX,e.offsetY-startY)
+}
+
+if(tool==="circle"){
+let radius=Math.sqrt(
+Math.pow(e.offsetX-startX,2)+
+Math.pow(e.offsetY-startY,2)
+)
+
+ctx.strokeStyle=colorPicker.value
+
+ctx.beginPath()
+ctx.arc(startX,startY,radius,0,Math.PI*2)
+ctx.stroke()
+}
+})
+
+canvas.addEventListener("mouseleave",()=>{
+drawing=false
+})
+
+document.getElementById("upload").addEventListener("change",function(e){
+
+const file=e.target.files[0]
+const img=new Image()
+
+img.onload=function(){
+ctx.drawImage(img,0,0)
+}
+
+img.src=URL.createObjectURL(file)
+
+})
+
+function saveImage(){
+
+const link=document.createElement("a")
+link.download="image.png"
+link.href=canvas.toDataURL()
+
+link.click()
+
+}
+
+</script>
+
+</body>
+</html>
